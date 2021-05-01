@@ -1,6 +1,7 @@
 from pubnub.callbacks import SubscribeCallback
 from pubnub.pnconfiguration import PNConfiguration
 from pubnub.pubnub import PubNub
+from inner.utils import Utils
 
 
 class _MySubscribeCallback(SubscribeCallback):
@@ -27,8 +28,17 @@ class PubNubManager:
     channel = "chan-1"
 
     _pnconfig = PNConfiguration()
-    _pnconfig.publish_key = 'pub-c-dd5c661f-ba65-4081-815a-04dc3eac0296'  # TODO Move to a separate file
-    _pnconfig.subscribe_key = 'sub-c-4f073e42-a145-11eb-8d7b-b642bba3de20'
+
+    config = Utils.load_ini_file(r"credentials.ini")
+    _pnconfig.publish_key = config.get("PubNub", "publish_key")
+    _pnconfig.subscribe_key = config.get("PubNub", "subscribe_key")
+
+    if _pnconfig.publish_key == "" or _pnconfig.subscribe_key == "":
+        raise ValueError(
+            "The inner\\credentials.ini file is missing the publish key and / or the subscribe key.\n"
+            "Create your publish and subscribe key from https://www.pubnub.com/docs/quickstarts/python\n"
+            "All users must use the same publish and subscription keys")
+
     _pnconfig.ssl = True
     _pubnub = PubNub(_pnconfig)
     _pubnub.add_listener(_MySubscribeCallback())
